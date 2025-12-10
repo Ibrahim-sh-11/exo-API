@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CATFACT - HACKING MODE</title>
+
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    background: black;
+    color: #00ff88;
+    font-family: "Courier New", monospace;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+  }
+
+  /* Écran type terminal */
+  .terminal {
+    width: 90%;
+    max-width: 700px;
+    background: rgba(0, 20, 0, 0.85);
+    border: 2px solid #00ff88;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 0 25px #00ff88;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Effet scan horizontal */
+  .scanline {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: rgba(0,255,100,0.4);
+    animation: scan 4s linear infinite;
+  }
+
+  @keyframes scan {
+    0% { top: 0; }
+    100% { top: 100%; }
+  }
+
+  h1 {
+    margin: 0 0 20px;
+    font-size: 26px;
+    text-shadow: 0 0 8px #00ff88;
+  }
+
+  #fact {
+    background: rgba(0, 40, 0, 0.6);
+    border-left: 4px solid #00ff88;
+    padding: 15px;
+    margin-top: 15px;
+    min-height: 60px;
+    line-height: 1.4;
+    font-size: 18px;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: 0.4s;
+  }
+
+  /* Bouton hacking */
+  button {
+    margin-top: 20px;
+    padding: 12px 22px;
+    font-size: 18px;
+    background: black;
+    color: #00ff88;
+    border: 2px solid #00ff88;
+    cursor: pointer;
+    transition: 0.25s;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    box-shadow: 0 0 15px #00ff88;
+  }
+
+  button:hover {
+    background: #00ff88;
+    color: black;
+    box-shadow: 0 0 30px #00ff88;
+    transform: scale(1.05);
+  }
+
+  button:active {
+    transform: scale(0.95);
+  }
+
+  button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  /* Texte qui clignote légèrement (effet terminal) */
+  .blink {
+    animation: blink 1s steps(2, start) infinite;
+  }
+
+  @keyframes blink {
+    0% { opacity: 0.4; }
+    100% { opacity: 1; }
+  }
+</style>
+
+</head>
+<body>
+
+<div class="terminal">
+  <div class="scanline"></div>
+
+  <h1>> CATFACT SYSTEM <span class="blink">_</span></h1>
+
+  <div id="fact">En attente d'une requête...</div>
+
+  <button id="btn">EXÉCUTER REQUÊTE</button>
+</div>
+
+<script>
+  const btn = document.getElementById("btn");
+  const fact = document.getElementById("fact");
+  const URL = "https://catfact.ninja/fact";
+
+  async function loadFact() {
+    btn.disabled = true;
+    fact.style.opacity = "0.3";
+    fact.textContent = "Requête en cours...";
+
+    try {
+      const res = await fetch(URL);
+      const data = await res.json();
+
+      fact.textContent = data.fact;
+      fact.style.opacity = "1";
+      fact.style.transform = "translateY(0)";
+    } catch {
+      fact.textContent = "ERREUR : Impossible de contacter le serveur.";
+      fact.style.opacity = "1";
+    }
+
+    btn.disabled = false;
+  }
+
+  btn.addEventListener("click", loadFact);
+</script>
+
+</body>
+</html>

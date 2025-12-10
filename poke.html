@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>POKEAPI MATRIX HACK - FINAL</title>
+
+<style>
+  body {
+    margin: 0;
+    overflow: hidden;
+    background: black;
+    font-family: "Courier New", monospace;
+    color: #00ff88;
+  }
+
+  /* Matrix background */
+  #matrix {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+  }
+
+  /* Terminal */
+  .terminal {
+    position: relative;
+    margin: auto;
+    margin-top: 60px;
+    width: 90%;
+    max-width: 750px;
+    background: rgba(0, 20, 0, 0.83);
+    border: 2px solid #00ff88;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 0 25px #00ff88;
+    text-align: center;
+    z-index: 10;
+  }
+
+  h1 {
+    font-size: 26px;
+    text-shadow: 0 0 10px #00ff88;
+  }
+
+  select, button {
+    margin-top: 20px;
+    padding: 12px;
+    font-size: 18px;
+    background: black;
+    color: #00ff88;
+    border: 2px solid #00ff88;
+    font-family: inherit;
+    cursor: pointer;
+    box-shadow: 0 0 15px #00ff88;
+  }
+
+  #pokemon {
+    margin-top: 30px;
+    padding: 20px;
+    text-align: left;
+    border-left: 4px solid #00ff88;
+  }
+
+  #pokemon img {
+    width: 150px;
+    margin-bottom: 15px;
+    filter: drop-shadow(0 0 10px #00ff88);
+  }
+
+  /* Bouton cyberattack */
+  #cyber {
+    margin-top: 20px;
+    background: black;
+    border: 2px solid red;
+    padding: 12px 20px;
+    color: red;
+    font-family: "Courier New";
+    cursor: pointer;
+    box-shadow: 0 0 15px red;
+  }
+
+  /* Cyberattack overlay full-screen */
+  #cyber-overlay {
+    position: fixed;
+    z-index: 99999;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: black;
+    color: red;
+    font-family: "Courier New", monospace;
+    font-size: 18px;
+    padding: 20px;
+    white-space: pre-wrap;
+    display: none;
+    overflow-y: auto;
+  }
+
+  .glitch {
+    animation: glitch 0.2s infinite;
+  }
+
+  @keyframes glitch {
+    0% { text-shadow: 2px 0 red; }
+    50% { text-shadow: -2px 0 #ff0044; }
+    100% { text-shadow: 2px 0 red; }
+  }
+</style>
+</head>
+<body>
+
+<!-- MATRIX CANVAS -->
+<canvas id="matrix"></canvas>
+
+<!-- CYBERATTACK FULLSCREEN -->
+<div id="cyber-overlay"></div>
+
+<div class="terminal">
+  <h1>> POKEAPI // MATRIX SYSTEM</h1>
+
+  <!-- Pokémon selection -->
+  <select id="select">
+    <option value="pikachu">Pikachu</option>
+    <option value="charizard">Charizard</option>
+    <option value="bulbasaur">Bulbasaur</option>
+    <option value="mew">Mew</option>
+    <option value="gengar">Gengar</option>
+    <option value="dragonite">Dragonite</option>
+  </select>
+
+  <br>
+  <button id="btn">EXÉCUTER REQUÊTE</button>
+  <br>
+  <button id="cyber">💀 LANCER CYBERATTAQUE 💀</button>
+
+  <div id="pokemon"></div>
+</div>
+
+
+<script>
+/* ---------------- MATRIX EFFECT ---------------- */
+const canvas = document.getElementById("matrix");
+const ctx = canvas.getContext("2d");
+
+canvas.height = window.innerHeight;
+canvas.width = window.innerWidth;
+
+const letters = "アイウエオカキクケコサシスセソタチツテト0123456789";
+const fontSize = 16;
+const columns = canvas.width / fontSize;
+
+const drops = Array(Math.floor(columns)).fill(1);
+let speed = 40;
+
+function drawMatrix() {
+  ctx.fillStyle = "rgba(0, 0, 0, 0.07)";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.fillStyle = "#00ff88";
+  ctx.font = fontSize + "px monospace";
+
+  for (let i = 0; i < drops.length; i++) {
+    const text = letters[Math.floor(Math.random() * letters.length)];
+    ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+      drops[i] = 0;
+    }
+    drops[i]++;
+  }
+}
+
+setInterval(drawMatrix, speed);
+
+
+/* ---------------- POKEAPI ---------------- */
+const btn = document.getElementById("btn");
+const select = document.getElementById("select");
+const container = document.getElementById("pokemon");
+
+async function loadPokemon() {
+  const name = select.value.toLowerCase();
+  const URL = `https://pokeapi.co/api/v2/pokemon/${name}`;
+
+  container.innerHTML = "<p>Chargement...</p>";
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(URL);
+    const data = await res.json();
+
+    const sprite = data.sprites.front_default;
+    const stats = data.stats;
+
+    container.innerHTML = `
+      <img src="${sprite}" alt="${name}">
+      <h2>${name.toUpperCase()}</h2>
+      ${stats.map(s => `<div>${s.stat.name}: ${s.base_stat}</div>`).join("")}
+    `;
+  } catch {
+    container.innerHTML = "<p>Erreur : Pokémon introuvable.</p>";
+  }
+
+  btn.disabled = false;
+}
+
+btn.addEventListener("click", loadPokemon);
+
+
+/* ----------- CYBERATTACK ANIMATION ----------- */
+const cyberBtn = document.getElementById("cyber");
+const overlay = document.getElementById("cyber-overlay");
+
+function wait(ms){ return new Promise(r => setTimeout(r, ms)); }
+
+cyberBtn.onclick = async () => {
+  overlay.style.display = "block";
+  overlay.innerHTML = "";
+  
+  /* 1 — GLITCH */
+  overlay.innerHTML = ">>> INITIALISATION...\n";
+  overlay.classList.add("glitch");
+  speed = 10;
+  await wait(1500);
+
+  /* 2 — CRÂNE ASCII */
+  overlay.classList.remove("glitch");
+  overlay.innerHTML = `
+        ██╗   ██╗██╗███████╗██╗   ██╗
+        ██║   ██║██║██╔════╝██║   ██║
+        ██║   ██║██║█████╗  ██║   ██║
+        ╚██╗ ██╔╝██║██╔══╝  ██║   ██║
+         ╚████╔╝ ██║██║     ╚██████╔╝
+          ╚═══╝  ╚═╝╚═╝      ╚═════╝ 
+   ████████ ACTIVATION VISUELLE ████████
+  `;
+  await wait(2000);
+
+  /* 3 — TERMINAL HOLLYWOOD */
+  overlay.innerHTML += "\n>>> SYSTEM OVERRIDE...\n";
+
+  const lines = [
+    "Scanning neon packets...",
+    "Decrypting holographic layer...",
+    "Launching cinematic worm (FAKE)...",
+    "Simulating quantum bypass...",
+    "Deploying cyber-HUD shaders..."
+  ];
+  for (let line of lines) {
+    overlay.innerHTML += "> " + line + "\n";
+    await wait(200);
+  }
+
+  /* 4 — BLACKOUT */
+  await wait(900);
+  overlay.style.background = "red";
+  overlay.style.color = "black";
+  overlay.innerHTML = "\n\n⚠️ SYSTEM FAILURE ⚠️\nREBOOTING...";
+  await wait(1800);
+
+  /* 5 — REBOOT FUTURISTE */
+  overlay.style.background = "black";
+  overlay.style.color = "#00ffee";
+  overlay.innerHTML = `
+>>> BOOTING FUTURE-OS
+>>> Restoring holographic kernel...
+>>> Stabilizing neon matrices...
+[SYSTEM ONLINE]
+  `;
+  speed = 40;
+
+  await wait(1800);
+  overlay.style.display = "none";
+};
+</script>
+
+</body>
+</html>
