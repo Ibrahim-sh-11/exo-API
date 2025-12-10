@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Cyber Portfolio</title>
+<style>
+    /* --- GLOBAL --- */
+    body {
+        margin: 0;
+        font-family: Consolas, monospace;
+        background: black;
+        color: #00ffcc;
+        overflow-x: hidden;
+    }
+
+    /* --- MATRIX CANVAS --- */
+    #matrix {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: -3;
+    }
+
+    /* --- FOG EFFECT --- */
+    #fog {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        background: radial-gradient(circle, rgba(0,255,150,0.15), transparent 70%);
+        filter: blur(40px);
+        animation: fogMove 8s infinite alternate ease-in-out;
+        z-index: -2;
+    }
+
+    @keyframes fogMove {
+        0% { transform: translateX(-50px); opacity: 0.4; }
+        100% { transform: translateX(50px); opacity: 0.7; }
+    }
+
+    /* --- HEADER --- */
+    header {
+        text-align: center;
+        padding: 20px;
+        font-size: 2em;
+        letter-spacing: 4px;
+        text-shadow: 0 0 10px #00ffcc;
+    }
+
+    /* --- GRID --- */
+    .container {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 30px;
+        padding: 50px 20px;
+    }
+
+    /* --- BIGGER CARDS --- */
+    .card {
+        background: rgba(0, 0, 0, 0.55);
+        padding: 50px;
+        border-radius: 20px;
+        width: 480px;                /* AGRANDI */
+        min-height: 300px;           /* AGRANDI */
+        border: 2px solid rgba(0,255,150,0.4);
+        box-shadow: 0 0 30px rgba(0,255,150,0.3);
+        backdrop-filter: blur(6px);
+        transition: 0.3s;
+    }
+
+    .card:hover {
+        transform: scale(1.03);
+        box-shadow: 0 0 40px #00ffcc;
+    }
+
+    button {
+        background: black;
+        border: 2px solid #00ffcc;
+        padding: 12px 20px;
+        color: #00ffcc;
+        cursor: pointer;
+        transition: 0.25s;
+        font-size: 1em;
+    }
+
+    button:hover {
+        background: #00ffcc;
+        color: black;
+        box-shadow: 0 0 20px #00ffcc;
+    }
+
+    img {
+        width: 160px;
+        filter: drop-shadow(0 0 10px #00ffcc);
+    }
+
+    /* --- CYBER ATTACK --- */
+    #cyberOverlay {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%;
+        height: 100%;
+        background: black;
+        color: red;
+        display: none;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        font-size: 1.4em;
+        text-shadow: 0 0 10px red;
+        z-index: 9999;
+    }
+
+    #logBox {
+        width: 80%;
+        height: 50%;
+        background: rgba(0,0,0,0.7);
+        border: 2px solid red;
+        padding: 20px;
+        overflow-y: auto;
+        box-shadow: 0 0 15px red;
+        font-size: 0.9em;
+    }
+
+    #progress {
+        width: 80%;
+        height: 20px;
+        border: 2px solid red;
+        margin-top: 20px;
+    }
+
+    #progressBar {
+        height: 100%;
+        width: 0%;
+        background: red;
+        box-shadow: 0 0 15px red;
+    }
+
+</style>
+</head>
+<body>
+
+<canvas id="matrix"></canvas>
+<div id="fog"></div>
+
+<header>🔰 CYBER PORTFOLIO 🔰</header>
+
+<div class="container">
+
+    <!-- CATFACTS -->
+    <div class="card">
+        <h2>Cat Fact</h2>
+        <button onclick="getFact()">Obtenir un CatFact</button>
+        <p id="fact"></p>
+    </div>
+
+    <!-- POKÉAPI -->
+    <div class="card">
+        <h2>PokéAPI</h2>
+        <input id="pokeName" placeholder="Nom du Pokémon" style="padding:10px;width:80%;background:black;border:1px solid #00ffcc;color:#00ffcc">
+        <br><br>
+        <button onclick="getPokemon()">Rechercher</button>
+        <div id="pokemon"></div>
+    </div>
+
+    <!-- CYBER ATTACK -->
+    <div class="card">
+        <h2>Simuler Cyber Attack</h2>
+        <button onclick="startCyberAttack()">🚨 Lancer l'attaque</button>
+    </div>
+
+</div>
+
+<!-- CYBER OVERLAY -->
+<div id="cyberOverlay">
+    <div id="logBox"></div>
+    <div id="progress"><div id="progressBar"></div></div>
+</div>
+
+
+<script>
+/* ===================== MATRIX RAIN ===================== */
+const canvas = document.getElementById("matrix");
+const ctx = canvas.getContext("2d");
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+const letters = "01";
+const fontSize = 18;
+const columns = canvas.width / fontSize;
+
+const drops = Array(Math.floor(columns)).fill(1);
+
+function drawMatrix() {
+    ctx.fillStyle = "rgba(0, 0, 0, 0.08)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = "#00ff88";
+    ctx.font = fontSize + "px monospace";
+
+    drops.forEach((y, x) => {
+        const text = letters[Math.floor(Math.random() * letters.length)];
+        ctx.fillText(text, x * fontSize, y * fontSize);
+
+        if (y * fontSize > canvas.height && Math.random() > 0.975) drops[x] = 0;
+        drops[x]++;
+    });
+}
+
+setInterval(drawMatrix, 40);
+
+
+/* ===================== CATFACTS ===================== */
+function getFact() {
+    fetch("https://catfact.ninja/fact")
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById("fact").innerText = data.fact;
+        });
+}
+
+
+/* ===================== POKÉAPI ===================== */
+function getPokemon() {
+    let name = document.getElementById("pokeName").value.toLowerCase();
+    fetch(`https://pokeapi.co/api/v2/pokemon/${name}`)
+        .then(res => res.json())
+        .then(p => {
+            document.getElementById("pokemon").innerHTML = `
+                <h3>${p.name.toUpperCase()}</h3>
+                <img src="${p.sprites.front_default}">
+                <p><strong>Stats :</strong></p>
+                <ul>
+                    ${p.stats.map(s => `<li>${s.stat.name}: ${s.base_stat}</li>`).join("")}
+                </ul>
+            `;
+        })
+        .catch(() => {
+            document.getElementById("pokemon").innerHTML = "<p style='color:red'>Pokémon introuvable.</p>";
+        });
+}
+
+
+/* ===================== CYBER ATTACK ===================== */
+function startCyberAttack() {
+    const overlay = document.getElementById("cyberOverlay");
+    const logBox = document.getElementById("logBox");
+    const bar = document.getElementById("progressBar");
+
+    overlay.style.display = "flex";
+    logBox.innerHTML = "";
+    bar.style.width = "0%";
+
+    let logs = [
+        "[INIT] Connecting to remote host...",
+        "[SCAN] Scanning open ports...",
+        "[SCAN] Ports detected: 22, 80, 443",
+        "[BRUTEFORCE] Attempting SSH brute force...",
+        "[ACCESS] Login bypassed!",
+        "[UPLOAD] Injecting payload...",
+        "[DEPLOY] Malware deployed successfully.",
+        "[EXTRACT] Downloading credentials...",
+        "[COMPLETE] System compromised."
+    ];
+
+    let progress = 0;
+    let step = 0;
+
+    let interval = setInterval(() => {
+        if (step < logs.length) {
+            logBox.innerHTML += logs[step] + "<br>";
+            logBox.scrollTop = logBox.scrollHeight;
+            step++;
+        }
+
+        progress += 11;
+        bar.style.width = progress + "%";
+
+        if (progress >= 100) {
+            clearInterval(interval);
+            setTimeout(() => overlay.style.display = "none", 1500);
+        }
+    }, 800);
+}
+
+</script>
+
+</body>
+</html>
